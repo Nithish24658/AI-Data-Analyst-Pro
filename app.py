@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from agent import analyze_data
 from crew_agent import run_team_analysis
 from sql_agent import convert_csv_to_sqlite, analyze_sql_database
-from style import apply_glossy_ui 
+from style import apply_glossy_ui
 
 # Initialize page settings
 st.set_page_config(page_title="AI Data Analyst", layout="wide")
@@ -107,22 +107,70 @@ if uploaded_file is not None:
         st.write("### 🗄️ Real-Time SQL Query Automation Engine")
         st.info("The application has converted your file into a relational SQLite database table named: `customer_data`")
         
+        # 1. Import BOTH functions from the package
+        try:
+            from streamlit_mic_recorder import speech_to_text
+        except Exception:
+            speech_to_text = None
+            st.warning("Optional dependency `streamlit_mic_recorder` not available — voice input disabled.")
+
+        st.write("🎙️ **Option A: Speak your question**")
+
+        # Initialize query tracking buckets in session state memory
+        if 'sql_view_query' not in st.session_state:
+            st.session_state['sql_view_query'] = ""
+        if 'sql_view_data' not in st.session_state:
+            st.session_state['sql_view_data'] = None
+
+        # Use the correct speech_to_text function to convert voice to text instantly
+        if speech_to_text:
+            try:
+                spoken_text = speech_to_text(
+                    start_prompt="Click to start speaking ⏺️",
+                    stop_prompt="Stop recording ⏹️",
+                    language='en',
+                    key="mic_stt"
+                )
+            except Exception:
+                spoken_text = ""
+                st.warning("Voice capture failed — please use the text input.")
+        else:
+            spoken_text = ""
+
+        # If voice text is captured, immediately pass it to the SQL pipeline
+        if spoken_text:
+            st.success(f"Captured Audio: *\"{spoken_text}\"*")
+            with st.spinner("AI writing SQL query from voice input..."):
+                gen_sql, sql_res = analyze_sql_database(db_filename, spoken_text)
+                st.session_state['sql_view_query'] = gen_sql
+                st.session_state['sql_view_data'] = sql_res
+
+        st.write("✍️ **Option B: Type your question**")
+
+        # Pre-fill typing input if voice text was captured
+        default_value = spoken_text if spoken_text else ""
         sql_query = st.text_input(
-            "Ask a structured question (The AI will write SQL syntax, query the database, and display it):", 
+            "Ask a structured question:", 
+            value=default_value,
             key="sql_input"
         )
         
+        # Run manual button update
         if st.button("Run SQL Generation Pipeline", key="btn_sql"):
             if sql_query:
                 with st.spinner("AI writing SQL query, executing schema scan, and fetching records..."):
-                    generated_sql, sql_result = analyze_sql_database(db_filename, sql_query)
-                    
-                    st.write(f"**Generated SQL Query:** `{generated_sql}`")
-                    st.write("### 🛢️ Live SQL Query Pipeline Result:")
-                    
-                    if isinstance(sql_result, pd.DataFrame):
-                        st.dataframe(sql_result, use_container_width=True)
-                    else:
-                        st.error(f"Execution Error: {sql_result}")
+                    gen_sql, sql_res = analyze_sql_database(db_filename, sql_query)
+                    st.session_state['sql_view_query'] = gen_sql
+                    st.session_state['sql_view_data'] = sql_res
             else:
-                st.warning("Please enter an operational data question.")
+                st.warning("Please enter or speak an operational data question.")
+                
+        # --- RENDERING ENGINE: Displays the output data grid ---
+        if st.session_state['sql_view_query']:
+            st.write(f"**Generated SQL Query:** `{st.session_state['sql_view_query']}`")
+            st.write("### 🛢️ Live SQL Query Pipeline Result:")
+            
+            if isinstance(st.session_state['sql_view_data'], pd.DataFrame):
+                st.dataframe(st.session_state['sql_view_data'], use_container_width=True)
+            else:
+                st.error(f"Execution Error: {st.session_state['sql_view_data']}")
