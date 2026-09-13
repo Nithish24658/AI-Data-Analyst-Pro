@@ -2,13 +2,13 @@
 
 > A local, privacy-first AI analytics workspace for exploring datasets, generating insights, automating SQL, and producing executive-ready analysis.
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/) [![LangChain](https://img.shields.io/badge/LangChain-Orchestration-1C3C3C)](https://www.langchain.com/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/) [![LangChain](https://img.shields.io/badge/LangChain-Orchestration-1C3C3C)](https://www.langchain.com/)
 
 ## 🎯 Why this project?
 
-AI Data Analyst Pro demonstrates how modern analytics workflows can be combined into one local application. A user can upload a CSV, profile its structure, ask natural-language questions, generate visualizations, run SQL-style analysis, and request a higher-level business interpretation.
+AI Data Analyst Pro combines practical analytics workflows into one local application. Upload a CSV, inspect its structure, ask natural-language questions, generate visualizations, run SQL-style analysis, and request an executive interpretation.
 
-The project is intentionally designed around a **local-first workflow**, using Ollama for the language model so that uploaded analytical data does not need to be sent to a hosted LLM service by default.
+The application uses **Ollama for local LLM inference**, keeping the core analysis workflow local by default.
 
 ## ✨ Core capabilities
 
@@ -16,7 +16,7 @@ The project is intentionally designed around a **local-first workflow**, using O
 |---|---|
 | 💬 Chat with Data | Natural-language questions translated into pandas-based analysis |
 | 📊 Dataset Profiling | Schema, row/column counts, missing values, unique values, and previews |
-| 👥 Multi-Agent Analysis | Technical/statistical analysis followed by business-oriented interpretation |
+| 👥 Multi-Agent Analysis | Technical analysis followed by business-oriented interpretation |
 | 🗄️ Text-to-SQL | CSV → SQLite conversion and natural-language SQL analysis |
 | 🎙️ Voice Queries | Optional speech-to-text input for SQL questions |
 | 📈 Visualization | Python/Matplotlib charts generated from analytical requests |
@@ -42,22 +42,16 @@ The project is intentionally designed around a **local-first workflow**, using O
               │
               ▼
        ┌─────────────┐
-       │ Multi-Agent │
-       │  Business   │
+       │ Business    │
        │ Interpretation│
        └─────────────┘
 ```
 
 ## 🛠️ Tech stack
 
-- **Python** — application and analytics logic
-- **Streamlit** — interactive web interface
-- **Pandas** — data manipulation and profiling
-- **Matplotlib** — analytical visualization
-- **SQLite3** — relational analytics layer
-- **LangChain Community** — LLM integration/orchestration
-- **Ollama** — local LLM runtime
-- **Optional:** `streamlit-mic-recorder` for voice input
+**Python · Streamlit · Pandas · Matplotlib · SQLite3 · LangChain Community · Ollama**
+
+Optional voice input: `streamlit-mic-recorder`.
 
 ## 📁 Project structure
 
@@ -69,7 +63,7 @@ AI-Data-Analyst-Pro/
 ├── sql_agent.py           # CSV → SQLite and text-to-SQL workflow
 ├── style.py               # Custom application styling
 ├── requirements.txt       # Python dependencies
-├── .gitignore             # Local/runtime files excluded from Git
+├── .gitignore             # Runtime/local files excluded from Git
 └── README.md              # Project documentation
 ```
 
@@ -104,13 +98,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Start Ollama and pull the local model
+### 4. Start the local LLM
+
+The current application code uses the `qwen2.5-coder:1.5b` Ollama model:
 
 ```bash
-ollama run llama3.2:1b
+ollama run qwen2.5-coder:1.5b
 ```
 
-### 5. Launch the app
+### 5. Launch the application
 
 ```bash
 streamlit run app.py
@@ -120,12 +116,12 @@ streamlit run app.py
 
 - Uploaded CSVs are processed locally by the application.
 - Runtime database files and temporary datasets are excluded through `.gitignore`.
-- Do **not** commit credentials, API keys, private datasets, or `.streamlit/secrets.toml`.
-- This project is a portfolio/academic application; production deployments should add authentication, stronger sandboxing, input validation, logging, and resource limits.
+- Never commit credentials, API keys, private datasets, or `.streamlit/secrets.toml`.
+- Before production deployment, add authentication, stronger code-execution sandboxing, input validation, logging, and resource limits.
 
 ## 📌 Portfolio value
 
-This project showcases practical skills across **Data Analytics, Python, SQL, Business Intelligence, LLM applications, data profiling, visualization, and analytics automation** rather than demonstrating a single isolated model.
+This project demonstrates practical skills across **Data Analytics, Python, SQL, LLM applications, data profiling, visualization, and analytics automation**.
 
 ## 👤 Author
 
