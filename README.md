@@ -1,57 +1,138 @@
-# 🤖 Local Glassmorphism AI Data Analyst Platform
+# 🤖 AI Data Analyst Pro
 
-A premium, production-ready, multi-agent AI Data Analyst platform built to automate data processing pipelines securely, locally, and completely for free. 
+> A local, privacy-first AI analytics workspace for exploring datasets, generating insights, automating SQL, and producing executive-ready analysis.
 
-The application features a modern **Glassmorphic / Frosted-Glass UI theme** that automatically adapts dynamically between Light and Dark mode options.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/) [![LangChain](https://img.shields.io/badge/LangChain-Orchestration-1C3C3C)](https://www.langchain.com/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
----
+## 🎯 Why this project?
 
-## 🚀 Visual Core Architectures
+AI Data Analyst Pro demonstrates how modern analytics workflows can be combined into one local application. A user can upload a CSV, profile its structure, ask natural-language questions, generate visualizations, run SQL-style analysis, and request a higher-level business interpretation.
 
-### 1. 💬 Chat with Data Agent
-- **Engine**: LangChain + Local `llama3.2:1b` model.
-- **Capability**: Safely writes native Python `pandas` manipulation queries in a localized memory sandbox to answer structural queries and build visualizations.
+The project is intentionally designed around a **local-first workflow**, using Ollama for the language model so that uploaded analytical data does not need to be sent to a hosted LLM service by default.
 
-### 2. 📊 Automated Dataset Profiling
-- **Engine**: Native Pandas Profiler.
-- **Capability**: Instantly parses massive uploaded CSV records upon landing to map out shape variables, missing elements, data schemas, and primary row previews.
+## ✨ Core capabilities
 
-### 3. 👥 Strategic Multi-Agent Pipeline
-- **Engine**: Custom Python Sequential Multi-Agent orchestration.
-- **Role A (Senior Data Scientist)**: Handles mathematical validation and statistical summaries.
-- **Role B (BI Manager)**: Translates raw technical findings into beautiful executive summaries with bulleted text reports.
+| Capability | What it demonstrates |
+|---|---|
+| 💬 Chat with Data | Natural-language questions translated into pandas-based analysis |
+| 📊 Dataset Profiling | Schema, row/column counts, missing values, unique values, and previews |
+| 👥 Multi-Agent Analysis | Technical/statistical analysis followed by business-oriented interpretation |
+| 🗄️ Text-to-SQL | CSV → SQLite conversion and natural-language SQL analysis |
+| 🎙️ Voice Queries | Optional speech-to-text input for SQL questions |
+| 📈 Visualization | Python/Matplotlib charts generated from analytical requests |
+| 🔒 Local LLM | Ollama-powered inference for a privacy-conscious workflow |
 
-### 4. 🗄️ Real-Time SQL Query Automation Engine
-- **Engine**: Python Native SQLite3 Relational Database Engine.
-- **Capability**: Converts incoming files into relational database schemas instantly. Includes a **Few-Shot Prompting framework** for rapid text-to-SQL compile routines without hallucination lags.
+## 🧠 Architecture
 
----
+```text
+                         ┌──────────────────────┐
+                         │     Streamlit UI     │
+                         └──────────┬───────────┘
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              ▼                     ▼                     ▼
+       ┌─────────────┐       ┌──────────────┐      ┌──────────────┐
+       │ Chat Agent │       │ Data Profiler│      │ SQL Engine   │
+       └──────┬──────┘       └──────────────┘      └──────┬───────┘
+              │                                            │
+              ▼                                            ▼
+       ┌─────────────┐                              ┌──────────────┐
+       │ Ollama LLM  │                              │   SQLite     │
+       └──────┬──────┘                              └──────────────┘
+              │
+              ▼
+       ┌─────────────┐
+       │ Multi-Agent │
+       │  Business   │
+       │ Interpretation│
+       └─────────────┘
+```
 
-## 🛠️ High-Performance Tech Stack
+## 🛠️ Tech stack
 
-- **UI Interface**: Streamlit Platform (HTML5/Custom CSS Injection).
-- **Orchestration Framework**: LangChain Community Ecosystem.
-- **Local LLM Engine**: Ollama Backend Framework (`llama3.2:1b`).
-- **Data Engineering Foundations**: Pandas DataFrames, SQLite3 Relational Architecture.
+- **Python** — application and analytics logic
+- **Streamlit** — interactive web interface
+- **Pandas** — data manipulation and profiling
+- **Matplotlib** — analytical visualization
+- **SQLite3** — relational analytics layer
+- **LangChain Community** — LLM integration/orchestration
+- **Ollama** — local LLM runtime
+- **Optional:** `streamlit-mic-recorder` for voice input
 
----
+## 📁 Project structure
 
-## 💻 Step-by-Step Local Deployment Guide
+```text
+AI-Data-Analyst-Pro/
+├── app.py                 # Streamlit application entry point
+├── agent.py               # Chat-with-data analysis agent
+├── crew_agent.py          # Multi-agent business analysis pipeline
+├── sql_agent.py           # CSV → SQLite and text-to-SQL workflow
+├── style.py               # Custom application styling
+├── requirements.txt       # Python dependencies
+├── .gitignore             # Local/runtime files excluded from Git
+└── README.md              # Project documentation
+```
 
-### 1. Initialize Local Model Engines
-Ensure Ollama is running actively on your machine, then open terminal/PowerShell and download the lightweight 1B model:
+## 🚀 Run locally
+
+### 1. Clone
+
+```bash
+git clone https://github.com/Nithish24658/AI-Data-Analyst-Pro.git
+cd AI-Data-Analyst-Pro
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Windows:
+```bash
+.venv\Scripts\activate
+```
+
+macOS/Linux:
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Start Ollama and pull the local model
+
 ```bash
 ollama run llama3.2:1b
 ```
 
-### 2. Install Project Dependencies
-Run the installation setup pipeline inside your active Python virtual environment terminal:
-```bash
-pip install streamlit pandas matplotlib langchain-community langchain-experimental
-```
+### 5. Launch the app
 
-### 3. Launch the Application Platform
-Execute the command pipeline to fire up your local browser portal dashboard link:
 ```bash
 streamlit run app.py
 ```
+
+## 🔐 Data & security notes
+
+- Uploaded CSVs are processed locally by the application.
+- Runtime database files and temporary datasets are excluded through `.gitignore`.
+- Do **not** commit credentials, API keys, private datasets, or `.streamlit/secrets.toml`.
+- This project is a portfolio/academic application; production deployments should add authentication, stronger sandboxing, input validation, logging, and resource limits.
+
+## 📌 Portfolio value
+
+This project showcases practical skills across **Data Analytics, Python, SQL, Business Intelligence, LLM applications, data profiling, visualization, and analytics automation** rather than demonstrating a single isolated model.
+
+## 👤 Author
+
+**Nithishsaran KM** — M.Sc. Data Science | Data Analytics | Python | SQL | Power BI | Machine Learning
+
+GitHub: [@Nithish24658](https://github.com/Nithish24658)
+
+---
+
+⭐ If this project helps you, consider starring the repository.
