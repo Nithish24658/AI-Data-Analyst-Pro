@@ -1,176 +1,436 @@
+
 import streamlit as st
-import os
-import time  # Fixed: Added the missing native tracking package!
 import pandas as pd
 import matplotlib.pyplot as plt
-from agent import analyze_data
-from crew_agent import run_team_analysis
-from sql_agent import convert_csv_to_sqlite, analyze_sql_database
+
 from style import apply_glossy_ui
+from data_engine import profile_dataset
 
-# Initialize page settings
-st.set_page_config(page_title="AI Data Analyst", layout="wide")
 
-# Apply the premium frosted glass UI theme style
+# --------------------------------------------------
+# 1. PAGE CONFIGURATION
+# --------------------------------------------------
+
+st.set_page_config(
+    page_title="AI Data Analyst",
+    page_icon="🤖",
+    layout="wide"
+)
+
 apply_glossy_ui()
 
 st.title("🤖 Your Automated AI Data Analyst")
 
-# File Upload Section
-uploaded_file = st.file_uploader("Upload your data (CSV format)", type=["csv"])
+st.caption(
+    "An offline-first data analytics and business intelligence platform."
+)
+
+
+# --------------------------------------------------
+# 2. DATA UPLOAD
+# --------------------------------------------------
+
+uploaded_file = st.file_uploader(
+    "Upload your business dataset",
+    type=["csv"],
+    help="Upload a CSV file to explore its data and generate insights."
+)
+
 
 if uploaded_file is not None:
-    with open("temp_data.csv", "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    
-    st.success("Data uploaded successfully!")
-    
-    # Setup our local background SQL database automatically
-    db_filename = "local_company.db"
-    convert_csv_to_sqlite("temp_data.csv", db_filename)
-    
-    # Operational multi-tabs setup with correct single variable index handling
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "💬 Chat with Data", 
-        "📊 Automated Profile Report", 
-        "👥 Executive Multi-Agent Crew",
-        "🗄️ SQL Database Engine"
-    ])
-    
-    with tab1:
-        user_query = st.text_input("Ask a question or request a chart:", key="tab1_q")
-        if st.button("Analyze", key="btn_single"):
-            if user_query:
-                plt.clf()
-                plt.close('all')
-                with st.spinner("Analyzing data..."):
-                    # Benchmark execution run time
-                    start_time = time.time()
-                    result = analyze_data("temp_data.csv", user_query)
-                    end_time = time.time()
-                    
-                    st.write("### 📊 Analysis Result:")
-                    st.write(result)
-                    st.caption(f"⚡ Analysis processed in {end_time - start_time:.2f} seconds.")
-                    
-                    # Safely render charts if any were generated in memory
-                    fig = plt.gcf()
-                    if fig and fig.axes:
-                        st.write("### 📈 Generated Visualization:")
-                        st.pyplot(fig)
-            else:
-                st.warning("Please enter a question first.")
-                
-    with tab2:
-        st.write("### 📑 Full Automated Dataset Insights")
-        df = pd.read_csv("temp_data.csv")
-        
-        # Fixed: Explicitly parsing tuple values to protect from streamlit value crashes
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Records (Rows)", df.shape[0])
-        col2.metric("Total Attributes (Columns)", df.shape[1])
-        col3.metric("Missing Values Found", int(df.isna().sum().sum()))
-        
-        st.write("#### 🔍 Data Schema Overview")
-        schema_df = pd.DataFrame({
-            "Data Type": df.dtypes.astype(str),
-            "Non-Null Count": df.notna().sum(),
-            "Unique Values": df.nunique()
-        })
-        st.dataframe(schema_df, use_container_width=True)
-        
-        st.write("#### 📋 First 5 Rows Preview")
-        st.dataframe(df.head(), use_container_width=True)
-        
-    with tab3:
-        st.write("### 👥 Strategic Multi-Agent Execution Pipeline")
-        crew_query = st.text_input("What high-level business question should the expert team analyze?", key="crew_input")
-        if st.button("Activate Team Breakdown", key="btn_crew"):
-            if crew_query:
-                with st.spinner("Processing framework pipeline..."):
-                    crew_report = run_team_analysis("temp_data.csv", crew_query)
-                    st.session_state['final_report'] = crew_report
-            else:
-                st.warning("Please enter a question for the team.")
-        
-        if 'final_report' in st.session_state:
-            st.write("### 📜 Final Executive Report Summary:")
-            st.write(st.session_state['final_report'])
-            st.download_button(
-                label="📥 Download Executive Report (.txt)",
-                data=st.session_state['final_report'],
-                file_name="AI_Executive_Analysis_Report.txt",
-                mime="text/plain"
+
+    try:
+        # Read uploaded dataset
+        df = pd.read_csv(uploaded_file)
+
+        if df.empty:
+            st.error("The uploaded dataset is empty.")
+            st.stop()
+
+        # Preserve uploaded data for existing modules
+        df.to_csv("temp_data.csv", index=False)
+
+        st.success("Dataset uploaded successfully!")
+
+        # Dataset information
+        st.caption(
+            f"File: {uploaded_file.name} | "
+            f"Size: {uploaded_file.size / 1024:.2f} KB"
+        )
+
+        # --------------------------------------------------
+        # 3. GENERATE VERIFIED DATA PROFILE
+        # --------------------------------------------------
+
+        profile = profile_dataset(df)
+
+        overview = profile["dataset_overview"]
+
+        # --------------------------------------------------
+        # 4. APPLICATION TABS
+        # --------------------------------------------------
+
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "💬 Chat with Data",
+            "📊 Automated Profile Report",
+            "👥 Executive Multi-Agent Crew",
+            "🗄️ SQL Database Engine"
+        ])
+
+
+        # --------------------------------------------------
+        # TAB 1: CHAT WITH DATA
+        # --------------------------------------------------
+
+        with tab1:
+
+            st.subheader("💬 Chat with Your Dataset")
+
+            st.info(
+                "Natural-language analytics is temporarily "
+                "under development. We are replacing unrestricted "
+                "AI-generated Python execution with a validated "
+                "analytics engine."
             )
 
-    with tab4:
-        st.write("### 🗄️ Real-Time SQL Query Automation Engine")
-        st.info("The application has converted your file into a relational SQLite database table named: `customer_data`")
-        
-        # 1. Import BOTH functions from the package
-        try:
-            from streamlit_mic_recorder import speech_to_text
-        except Exception:
-            speech_to_text = None
-            st.warning("Optional dependency `streamlit_mic_recorder` not available — voice input disabled.")
+            st.text_input(
+                "Ask a question about your dataset:",
+                placeholder="Example: What is the average purchase amount?",
+                disabled=True,
+                key="chat_question"
+            )
 
-        st.write("🎙️ **Option A: Speak your question**")
+            st.button(
+                "Analyze",
+                disabled=True,
+                key="chat_analyze"
+            )
 
-        # Initialize query tracking buckets in session state memory
-        if 'sql_view_query' not in st.session_state:
-            st.session_state['sql_view_query'] = ""
-        if 'sql_view_data' not in st.session_state:
-            st.session_state['sql_view_data'] = None
 
-        # Use the correct speech_to_text function to convert voice to text instantly
-        if speech_to_text:
-            try:
-                spoken_text = speech_to_text(
-                    start_prompt="Click to start speaking ⏺️",
-                    stop_prompt="Stop recording ⏹️",
-                    language='en',
-                    key="mic_stt"
+        # --------------------------------------------------
+        # TAB 2: AUTOMATED PROFILE REPORT
+        # --------------------------------------------------
+
+        with tab2:
+
+            st.subheader("📑 Full Automated Dataset Insights")
+
+            # Dataset overview
+            st.write("### 📌 Dataset Overview")
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Total Records",
+                overview["total_rows"]
+            )
+
+            col2.metric(
+                "Total Columns",
+                overview["total_columns"]
+            )
+
+            col3.metric(
+                "Missing Values",
+                overview["total_missing_values"]
+            )
+
+            col4.metric(
+                "Duplicate Rows",
+                overview["duplicate_rows"]
+            )
+
+
+            # --------------------------------------------------
+            # DATA SCHEMA AND QUALITY
+            # --------------------------------------------------
+
+            st.divider()
+
+            st.write("### 🔍 Data Schema & Quality Overview")
+
+            schema_df = pd.DataFrame(
+                profile["column_details"]
+            )
+
+            st.dataframe(
+                schema_df,
+                use_container_width=True,
+                hide_index=True
+            )
+
+
+            # --------------------------------------------------
+            # NUMERICAL ANALYSIS
+            # --------------------------------------------------
+
+            st.divider()
+
+            st.write("### 📊 Numerical Analysis")
+
+            numeric_summary = profile["numeric_summary"]
+
+            if numeric_summary:
+
+                numeric_df = pd.DataFrame.from_dict(
+                    numeric_summary,
+                    orient="index"
                 )
-            except Exception:
-                spoken_text = ""
-                st.warning("Voice capture failed — please use the text input.")
-        else:
-            spoken_text = ""
 
-        # If voice text is captured, immediately pass it to the SQL pipeline
-        if spoken_text:
-            st.success(f"Captured Audio: *\"{spoken_text}\"*")
-            with st.spinner("AI writing SQL query from voice input..."):
-                gen_sql, sql_res = analyze_sql_database(db_filename, spoken_text)
-                st.session_state['sql_view_query'] = gen_sql
-                st.session_state['sql_view_data'] = sql_res
+                numeric_df.index.name = "Column"
 
-        st.write("✍️ **Option B: Type your question**")
+                st.dataframe(
+                    numeric_df,
+                    use_container_width=True
+                )
 
-        # Pre-fill typing input if voice text was captured
-        default_value = spoken_text if spoken_text else ""
-        sql_query = st.text_input(
-            "Ask a structured question:", 
-            value=default_value,
-            key="sql_input"
+            else:
+
+                st.info(
+                    "No numerical columns were found "
+                    "in this dataset."
+                )
+
+
+            # --------------------------------------------------
+            # CATEGORICAL ANALYSIS
+            # --------------------------------------------------
+
+            st.divider()
+
+            st.write("### 📌 Categorical Analysis")
+
+            categorical_summary = profile[
+                "categorical_summary"
+            ]
+
+            if categorical_summary:
+
+                for column, distribution in (
+                    categorical_summary.items()
+                ):
+
+                    st.write(f"**{column}**")
+
+                    category_df = pd.DataFrame(
+                        list(distribution.items()),
+                        columns=["Category", "Count"]
+                    )
+
+                    st.dataframe(
+                        category_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+
+            else:
+
+                st.info(
+                    "No categorical columns were found."
+                )
+
+
+            # --------------------------------------------------
+            # DATA QUALITY FINDINGS
+            # --------------------------------------------------
+
+            st.divider()
+
+            st.write("### ⚠️ Data Quality Findings")
+
+            # Missing values
+            missing_columns = [
+                item
+                for item in profile["column_details"]
+                if item["missing_count"] > 0
+            ]
+
+            if missing_columns:
+
+                st.warning("Missing values detected:")
+
+                missing_df = pd.DataFrame(
+                    missing_columns
+                )
+
+                st.dataframe(
+                    missing_df[
+                        [
+                            "column_name",
+                            "missing_count",
+                            "missing_percentage"
+                        ]
+                    ],
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+            else:
+
+                st.success("No missing values found.")
+
+
+            # Duplicate records
+            if overview["duplicate_rows"] > 0:
+
+                st.warning(
+                    f"Found {overview['duplicate_rows']} "
+                    "duplicate records."
+                )
+
+            else:
+
+                st.success("No duplicate records found.")
+
+
+            # Duplicate column names
+            if profile["duplicate_columns"]:
+
+                st.warning(
+                    "Duplicate column names detected: "
+                    + ", ".join(
+                        profile["duplicate_columns"]
+                    )
+                )
+
+            else:
+
+                st.success("No duplicate column names found.")
+
+
+            # Constant columns
+            if profile["constant_columns"]:
+
+                st.warning(
+                    "Constant columns detected: "
+                    + ", ".join(
+                        profile["constant_columns"]
+                    )
+                )
+
+            else:
+
+                st.success("No constant columns found.")
+
+
+            # --------------------------------------------------
+            # DATASET PREVIEW
+            # --------------------------------------------------
+
+            st.divider()
+
+            st.write("### 📋 First 5 Rows Preview")
+
+            st.dataframe(
+                df.head(),
+                use_container_width=True
+            )
+
+            # Full dataset download
+            st.download_button(
+                label="📥 Download Dataset",
+                data=df.to_csv(index=False).encode("utf-8"),
+                file_name="processed_dataset.csv",
+                mime="text/csv"
+            )
+
+
+        # --------------------------------------------------
+        # TAB 3: EXECUTIVE MULTI-AGENT CREW
+        # --------------------------------------------------
+
+        with tab3:
+
+            st.subheader(
+                "👥 Strategic Multi-Agent Analysis"
+            )
+
+            st.info(
+                "The multi-agent analysis module is temporarily "
+                "under development. It will be re-enabled after "
+                "we connect it to verified statistical results."
+            )
+
+            st.text_input(
+                "Enter a business question:",
+                placeholder="Example: What are the main customer trends?",
+                disabled=True,
+                key="crew_question"
+            )
+
+            st.button(
+                "Activate Team Breakdown",
+                disabled=True,
+                key="crew_button"
+            )
+
+
+        # --------------------------------------------------
+        # TAB 4: SQL DATABASE ENGINE
+        # --------------------------------------------------
+
+        with tab4:
+
+            st.subheader(
+                "🗄️ Natural Language to SQL Analytics"
+            )
+
+            st.info(
+                "The SQL module is temporarily under development. "
+                "We will implement read-only SQL validation, "
+                "query restrictions and execution safeguards "
+                "before enabling it."
+            )
+
+            st.text_input(
+                "Ask a database question:",
+                placeholder="Example: Show the top 5 customers",
+                disabled=True,
+                key="sql_question"
+            )
+
+            st.button(
+                "Run SQL Analysis",
+                disabled=True,
+                key="sql_button"
+            )
+
+
+    except pd.errors.EmptyDataError:
+
+        st.error(
+            "The uploaded CSV file does not contain any data."
         )
-        
-        # Run manual button update
-        if st.button("Run SQL Generation Pipeline", key="btn_sql"):
-            if sql_query:
-                with st.spinner("AI writing SQL query, executing schema scan, and fetching records..."):
-                    gen_sql, sql_res = analyze_sql_database(db_filename, sql_query)
-                    st.session_state['sql_view_query'] = gen_sql
-                    st.session_state['sql_view_data'] = sql_res
-            else:
-                st.warning("Please enter or speak an operational data question.")
-                
-        # --- RENDERING ENGINE: Displays the output data grid ---
-        if st.session_state['sql_view_query']:
-            st.write(f"**Generated SQL Query:** `{st.session_state['sql_view_query']}`")
-            st.write("### 🛢️ Live SQL Query Pipeline Result:")
-            
-            if isinstance(st.session_state['sql_view_data'], pd.DataFrame):
-                st.dataframe(st.session_state['sql_view_data'], use_container_width=True)
-            else:
-                st.error(f"Execution Error: {st.session_state['sql_view_data']}")
+
+    except pd.errors.ParserError:
+
+        st.error(
+            "Unable to read this CSV file. "
+            "Please check its formatting."
+        )
+
+    except Exception as error:
+
+        st.error(
+            f"An error occurred while processing the dataset: {error}"
+        )
+
+
+else:
+
+    st.info(
+        "Please upload a CSV dataset to start your analysis."
+    )
+
+    st.markdown(
+        """
+        ### Available capabilities
+
+        - Automated dataset profiling
+        - Missing-value detection
+        - Duplicate-record identification
+        - Numerical statistical analysis
+        - Categorical distribution analysis
+        - Data-quality reporting
+        """
+    )
